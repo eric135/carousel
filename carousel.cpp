@@ -14,8 +14,8 @@ Carousel::Carousel(const LogCallback& callback,
   , m_bloom(memorySize * 10)
   , m_memorySize(memorySize)
   , m_collectionTime(collectionTime)
+  , m_phaseDuration(std::chrono::milliseconds(memorySize / collectionTime.count()))
 {
-  m_phaseDuration = std::chrono::milliseconds(memorySize / collectionTime.count());
 }
 
 void

@@ -64,9 +64,9 @@ private:
   Bloom m_bloom;
   const double m_x = 2.3;
 
-  size_t m_memorySize;
-  std::chrono::milliseconds m_collectionTime;
-  std::chrono::milliseconds m_phaseDuration;
+  const size_t m_memorySize;
+  const std::chrono::milliseconds m_collectionTime;
+  const std::chrono::milliseconds m_phaseDuration;
 
   size_t m_k = 0;
   size_t m_kMask = 0;
