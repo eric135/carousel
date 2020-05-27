@@ -6,8 +6,8 @@
 
 #include "bloom.hpp"
 
+#include <chrono>
 #include <functional>
-#include <optional>
 #include <string>
 
 namespace carousel {
@@ -21,14 +21,14 @@ public:
   /**
    * \brief Creates an instance of Carousel that outputs to the specified callback
    * \param memorySize Number of sources that can be logged
-   * \param collectionTime Estimated number of total entries to be processed
+   * \param collectionTime Time logging will run for
    * \param highThreshold Upper bound on number of matching keys within a phase before repartitioning
    * \param lowThreshold Lower bound on number of matching keys within a phase before repartitioning
    * \param bloomFilterBits Number of bits to use in bloom filter. Greater values can increase accuracy
    */
   Carousel(const LogCallback& callback,
            size_t memorySize,
-           size_t collectionTime,
+           std::chrono::milliseconds collectionTime,
            size_t highThreshold = 32,
            size_t lowThreshold = 8,
            size_t bloomFilterBits = 128);
@@ -64,15 +64,15 @@ private:
   Bloom m_bloom;
 
   size_t m_memorySize;
-  size_t m_collectionTime;
+  std::chrono::milliseconds m_collectionTime;
   size_t m_highThreshold;
   size_t m_lowThreshold;
-  size_t m_phaseDuration = 0;
+  std::chrono::milliseconds m_phaseDuration;
 
   size_t m_k = 0;
   size_t m_kMask = 0;
   size_t m_currentPhase = 0;
-  size_t m_nThisPhase = 0;
+  std::chrono::steady_clock::time_point m_phaseStartTime;
   size_t m_nMatchingThisPhase = 0;
 };
 

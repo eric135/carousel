@@ -1,7 +1,7 @@
 SRC := $(wildcard *.cpp)
 HDR := $(SRC:.cpp=.hpp)
 OBJ := $(SRC:.cpp=.o)
-CXXFLAGS := -Wall -Werror -fpic -std=c++17
+CXXFLAGS := -Wall -Werror -fpic -std=c++11
 
 # Users can adjust these variables to modify compilation or installation
 # C++ compiler to use

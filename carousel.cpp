@@ -9,7 +9,7 @@ namespace carousel {
 
 Carousel::Carousel(const LogCallback& callback,
                    size_t memorySize,
-                   size_t collectionTime,
+                   std::chrono::milliseconds collectionTime,
                    size_t highThreshold,
                    size_t lowThreshold,
                    size_t bloomFilterSize)
@@ -20,18 +20,21 @@ Carousel::Carousel(const LogCallback& callback,
   , m_highThreshold(highThreshold)
   , m_lowThreshold(lowThreshold)
 {
-  // TODO: Is this the correct way to determine the phase duration?
-  m_phaseDuration = static_cast<double>(collectionTime) / static_cast<double>(memorySize);
+  m_phaseDuration = std::chrono::milliseconds(memorySize / collectionTime.count());
 }
 
 void
 Carousel::log(const std::string& key, const std::string& entry)
 {
+  if (std::chrono::steady_clock::now() >= m_phaseStartTime + m_phaseDuration) {
+    // Time to go to the next phase
+    startNextPhase();
+  }
+
   size_t hash = std::hash<std::string>{}(key);
 
   // Check if entry matches the current phase
   if ((hash & m_kMask) == m_currentPhase) {
-
     // Check if likely (bloom filter) already stored this key this phase
     if (m_bloom.isEvidenced(key)) {
       // Skip since likely already logged this phase
@@ -44,13 +47,6 @@ Carousel::log(const std::string& key, const std::string& entry)
     // Call callback to log this entry
     m_callback(key, entry);
   }
-
-  m_nThisPhase++;
-
-  if (m_nThisPhase >= m_phaseDuration) {
-    // Time to go to the next phase
-    startNextPhase();
-  }
 }
 
 void
@@ -60,7 +56,7 @@ Carousel::reset()
   m_k = 0;
   m_kMask = 0;
   m_currentPhase = 0;
-  m_nThisPhase = 0;
+  m_phaseStartTime = std::chrono::steady_clock::now();
   m_nMatchingThisPhase = 0;
 }
 
@@ -77,8 +73,11 @@ Carousel::startNextPhase()
   }
   else {
     m_bloom.reset();
-    m_currentPhase = (m_currentPhase + 1) % static_cast<size_t>(std::pow(2, m_k - 1));
-    m_nThisPhase = 0;
+    // Nothing changes if k=0 because we just repeat the same phase ad infinitum
+    if (m_k > 0) {
+      m_currentPhase = (m_currentPhase + 1) % static_cast<size_t>(std::pow(2, m_k - 1));
+    }
+    m_phaseStartTime = std::chrono::steady_clock::now();
     m_nMatchingThisPhase = 0;
   }
 }
@@ -90,7 +89,7 @@ Carousel::repartitionHigh()
   m_k++;
   m_kMask += std::pow(2, m_k - 1);
   m_currentPhase = 0;
-  m_nThisPhase = 0;
+  m_phaseStartTime = std::chrono::steady_clock::now();
   m_nMatchingThisPhase = 0;
 }
 
@@ -101,7 +100,7 @@ Carousel::repartitionLow()
   m_k--;
   m_kMask -= std::pow(2, m_k);
   m_currentPhase = 0;
-  m_nThisPhase = 0;
+  m_phaseStartTime = std::chrono::steady_clock::now();
   m_nMatchingThisPhase = 0;
 }
 

@@ -1,11 +1,12 @@
 # Carousel scalable logging library for C++
 
-This is an implementation of the Carousel scalable logging algorithm in C++17.
+This is an implementation of the Carousel scalable logging algorithm in C++.
 This algorithm was proposed by Lam, et al. in "Carousel: Scalable Logging for Intrusion Prevention Systems" (NSDI 2010).
 
 ## Dependencies
 
-To use this library, one needs a compiler compatible with ISO standardized C++17 and a make tool compatible with GNU-style Makefiles.
+To build and use this library, one needs a compiler compatible with ISO-standardized C++11 and a make tool compatible with GNU-style Makefiles.
+No external libraries are required.
 
 ## Building the library
 
