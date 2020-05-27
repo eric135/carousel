@@ -45,6 +45,12 @@ private:
   size_t
   hash3(const std::string& key) const;
 
+  size_t
+  hash4(const std::string& key) const;
+
+  size_t
+  hash5(const std::string& key) const;
+
 private:
   size_t m_nBits;
   std::vector<bool> m_bits;
