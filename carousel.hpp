@@ -29,9 +29,7 @@ public:
   Carousel(const LogCallback& callback,
            size_t memorySize,
            std::chrono::milliseconds collectionTime,
-           size_t highThreshold = 32,
-           size_t lowThreshold = 8,
-           size_t bloomFilterBits = 128);
+           size_t bloomFilterBits = 5000);
 
   /**
    * \brief Submit the specified entry to Carousel
@@ -54,24 +52,29 @@ private:
   startNextPhase();
 
   void
-  repartitionHigh();
+  repartitionOverflow();
 
   void
-  repartitionLow();
+  repartitionUnderflow();
+
+  bool
+  isBloomFilterOverflowed();
+
+  bool
+  isBloomFilterUnderflowed();
 
 private:
   LogCallback m_callback;
   Bloom m_bloom;
+  const double m_x = 2.3;
 
   size_t m_memorySize;
   std::chrono::milliseconds m_collectionTime;
-  size_t m_highThreshold;
-  size_t m_lowThreshold;
   std::chrono::milliseconds m_phaseDuration;
 
   size_t m_k = 0;
   size_t m_kMask = 0;
-  size_t m_currentPhase = 0;
+  size_t m_v = 0;
   std::chrono::steady_clock::time_point m_phaseStartTime;
   size_t m_nMatchingThisPhase = 0;
 };

@@ -10,15 +10,11 @@ namespace carousel {
 Carousel::Carousel(const LogCallback& callback,
                    size_t memorySize,
                    std::chrono::milliseconds collectionTime,
-                   size_t highThreshold,
-                   size_t lowThreshold,
                    size_t bloomFilterSize)
   : m_callback(callback)
   , m_bloom(bloomFilterSize)
   , m_memorySize(memorySize)
   , m_collectionTime(collectionTime)
-  , m_highThreshold(highThreshold)
-  , m_lowThreshold(lowThreshold)
 {
   m_phaseDuration = std::chrono::milliseconds(memorySize / collectionTime.count());
 }
@@ -33,8 +29,8 @@ Carousel::log(const std::string& key, const std::string& entry)
 
   size_t hash = std::hash<std::string>{}(key);
 
-  // Check if entry matches the current phase
-  if ((hash & m_kMask) == m_currentPhase) {
+  // Check if key matches the current phase
+  if ((hash & m_kMask) == m_v) {
     // Check if likely (bloom filter) already stored this key this phase
     if (m_bloom.isEvidenced(key)) {
       // Skip since likely already logged this phase
@@ -44,7 +40,12 @@ Carousel::log(const std::string& key, const std::string& entry)
     m_bloom.add(key);
     m_nMatchingThisPhase++;
 
-    // Call callback to log this entry
+    // Check for bloom filter overflow
+    if (isBloomFilterOverflowed()) {
+      repartitionOverflow();
+    }
+
+    // Call callback to log this key+entry
     m_callback(key, entry);
   }
 }
@@ -55,53 +56,50 @@ Carousel::reset()
   m_bloom.reset();
   m_k = 0;
   m_kMask = 0;
-  m_currentPhase = 0;
+  m_v = 0;
   m_phaseStartTime = std::chrono::steady_clock::now();
-  m_nMatchingThisPhase = 0;
 }
 
 void
 Carousel::startNextPhase()
 {
-  if (m_nMatchingThisPhase > m_highThreshold) {
-    // We've exceeded the number that can match during this phase => repartition high
-    repartitionHigh();
+  // Check for bloom filter underflow
+  if (isBloomFilterUnderflowed()) {
+    repartitionUnderflow();
   }
-  else if (m_nMatchingThisPhase < m_lowThreshold) {
-    // We've not met the minimum number that should match during this phase => repartition low
-    repartitionLow();
-  }
-  else {
-    m_bloom.reset();
-    // Nothing changes if k=0 because we just repeat the same phase ad infinitum
-    if (m_k > 0) {
-      m_currentPhase = (m_currentPhase + 1) % static_cast<size_t>(std::pow(2, m_k - 1));
-    }
-    m_phaseStartTime = std::chrono::steady_clock::now();
-    m_nMatchingThisPhase = 0;
-  }
+
+  m_bloom.reset();
+  m_v = (m_v + 1) % static_cast<size_t>(std::pow(2, m_k));
+  m_phaseStartTime = std::chrono::steady_clock::now();
+  m_nMatchingThisPhase = 0;
 }
 
 void
-Carousel::repartitionHigh()
+Carousel::repartitionOverflow()
 {
   m_bloom.reset();
   m_k++;
   m_kMask += std::pow(2, m_k - 1);
-  m_currentPhase = 0;
+  m_v = (m_v + 1) % static_cast<size_t>(std::pow(2, m_k));
   m_phaseStartTime = std::chrono::steady_clock::now();
-  m_nMatchingThisPhase = 0;
 }
 
 void
-Carousel::repartitionLow()
+Carousel::repartitionUnderflow()
 {
-  m_bloom.reset();
   m_k--;
-  m_kMask -= std::pow(2, m_k);
-  m_currentPhase = 0;
-  m_phaseStartTime = std::chrono::steady_clock::now();
-  m_nMatchingThisPhase = 0;
+}
+
+bool
+Carousel::isBloomFilterOverflowed()
+{
+  return m_nMatchingThisPhase > m_memorySize;
+}
+
+bool
+Carousel::isBloomFilterUnderflowed()
+{
+  return static_cast<double>(m_nMatchingThisPhase) < (static_cast<double>(m_memorySize) / m_x);
 }
 
 } // namespace carousel
