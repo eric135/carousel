@@ -11,12 +11,14 @@ Carousel::Carousel(const LogCallback& callback,
                    size_t memorySize,
                    size_t collectionTime,
                    size_t highThreshold,
+                   size_t lowThreshold,
                    size_t bloomFilterSize)
   : m_callback(callback)
   , m_bloom(bloomFilterSize)
   , m_memorySize(memorySize)
   , m_collectionTime(collectionTime)
   , m_highThreshold(highThreshold)
+  , m_lowThreshold(lowThreshold)
 {
   // TODO: Is this the correct way to determine the phase duration?
   m_phaseDuration = static_cast<double>(collectionTime) / static_cast<double>(memorySize);
@@ -41,12 +43,6 @@ Carousel::log(const std::string& key, const std::string& entry)
 
     // Call callback to log this entry
     m_callback(key, entry);
-
-    if (m_nMatchingThisPhase > m_highThreshold) {
-      // We've exceeded the number that can match during this phase => repartition
-      repartition();
-      return;
-    }
   }
 
   m_nThisPhase++;
@@ -71,17 +67,39 @@ Carousel::reset()
 void
 Carousel::startNextPhase()
 {
+  if (m_nMatchingThisPhase > m_highThreshold) {
+    // We've exceeded the number that can match during this phase => repartition high
+    repartitionHigh();
+  }
+  else if (m_nMatchingThisPhase < m_lowThreshold) {
+    // We've not met the minimum number that should match during this phase => repartition low
+    repartitionLow();
+  }
+  else {
+    m_bloom.reset();
+    m_currentPhase = (m_currentPhase + 1) % static_cast<size_t>(std::pow(2, m_k - 1));
+    m_nThisPhase = 0;
+    m_nMatchingThisPhase = 0;
+  }
+}
+
+void
+Carousel::repartitionHigh()
+{
   m_bloom.reset();
-  m_currentPhase = (m_currentPhase + 1) % static_cast<size_t>(std::pow(2, m_k - 1));
+  m_k++;
+  m_kMask += std::pow(2, m_k - 1);
+  m_currentPhase = 0;
   m_nThisPhase = 0;
   m_nMatchingThisPhase = 0;
 }
 
 void
-Carousel::repartition()
+Carousel::repartitionLow()
 {
-  m_k++;
-  m_kMask += std::pow(2, m_k - 1);
+  m_bloom.reset();
+  m_k--;
+  m_kMask -= std::pow(2, m_k);
   m_currentPhase = 0;
   m_nThisPhase = 0;
   m_nMatchingThisPhase = 0;

@@ -23,12 +23,14 @@ public:
    * \param memorySize Number of sources that can be logged
    * \param collectionTime Estimated number of total entries to be processed
    * \param highThreshold Upper bound on number of matching keys within a phase before repartitioning
+   * \param lowThreshold Lower bound on number of matching keys within a phase before repartitioning
    * \param bloomFilterBits Number of bits to use in bloom filter. Greater values can increase accuracy
    */
   Carousel(const LogCallback& callback,
            size_t memorySize,
            size_t collectionTime,
            size_t highThreshold = 32,
+           size_t lowThreshold = 8,
            size_t bloomFilterBits = 128);
 
   /**
@@ -52,7 +54,10 @@ private:
   startNextPhase();
 
   void
-  repartition();
+  repartitionHigh();
+
+  void
+  repartitionLow();
 
 private:
   LogCallback m_callback;
@@ -61,6 +66,7 @@ private:
   size_t m_memorySize;
   size_t m_collectionTime;
   size_t m_highThreshold;
+  size_t m_lowThreshold;
   size_t m_phaseDuration = 0;
 
   size_t m_k = 1;
