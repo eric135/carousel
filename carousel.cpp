@@ -57,8 +57,8 @@ void
 Carousel::reset()
 {
   m_bloom.reset();
-  m_k = 1;
-  m_kMask = 1;
+  m_k = 0;
+  m_kMask = 0;
   m_currentPhase = 0;
   m_nThisPhase = 0;
   m_nMatchingThisPhase = 0;

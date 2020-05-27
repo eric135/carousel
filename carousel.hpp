@@ -69,8 +69,8 @@ private:
   size_t m_lowThreshold;
   size_t m_phaseDuration = 0;
 
-  size_t m_k = 1;
-  size_t m_kMask = 1;
+  size_t m_k = 0;
+  size_t m_kMask = 0;
   size_t m_currentPhase = 0;
   size_t m_nThisPhase = 0;
   size_t m_nMatchingThisPhase = 0;
