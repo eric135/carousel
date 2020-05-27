@@ -9,10 +9,9 @@ namespace carousel {
 
 Carousel::Carousel(const LogCallback& callback,
                    size_t memorySize,
-                   std::chrono::milliseconds collectionTime,
-                   size_t bloomFilterSize)
+                   std::chrono::milliseconds collectionTime)
   : m_callback(callback)
-  , m_bloom(bloomFilterSize)
+  , m_bloom(memorySize * 10)
   , m_memorySize(memorySize)
   , m_collectionTime(collectionTime)
 {

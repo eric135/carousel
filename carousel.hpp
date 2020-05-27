@@ -22,14 +22,10 @@ public:
    * \brief Creates an instance of Carousel that outputs to the specified callback
    * \param memorySize Number of sources that can be logged
    * \param collectionTime Time logging will run for
-   * \param highThreshold Upper bound on number of matching keys within a phase before repartitioning
-   * \param lowThreshold Lower bound on number of matching keys within a phase before repartitioning
-   * \param bloomFilterBits Number of bits to use in bloom filter. Greater values can increase accuracy
    */
   Carousel(const LogCallback& callback,
            size_t memorySize,
-           std::chrono::milliseconds collectionTime,
-           size_t bloomFilterBits = 5000);
+           std::chrono::milliseconds collectionTime);
 
   /**
    * \brief Submit the specified entry to Carousel
