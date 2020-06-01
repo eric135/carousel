@@ -21,11 +21,11 @@ public:
   /**
    * \brief Creates an instance of Carousel that outputs to the specified callback
    * \param memorySize Number of sources that can be logged
-   * \param collectionTime Time logging will run for
+   * \param collectionInterval Interval at which logger can accept log entries
    */
   Carousel(const LogCallback& callback,
            size_t memorySize,
-           std::chrono::milliseconds collectionTime);
+           std::chrono::milliseconds collectionInterval);
 
   /**
    * \brief Submit the specified entry to Carousel
@@ -65,7 +65,7 @@ private:
   const double m_x = 2.3;
 
   const size_t m_memorySize;
-  const std::chrono::milliseconds m_collectionTime;
+  const std::chrono::milliseconds m_collectionInterval;
   const std::chrono::milliseconds m_phaseDuration;
 
   size_t m_k = 0;
