@@ -5,6 +5,7 @@
 #define CAROUSEL_CAROUSEL_HPP
 
 #include "bloom.hpp"
+#include "timer.hpp"
 
 #include <chrono>
 #include <functional>
@@ -12,6 +13,7 @@
 
 namespace carousel {
 
+template<class T, class I>
 class Carousel
 {
 public:
@@ -25,7 +27,8 @@ public:
    */
   Carousel(const LogCallback& callback,
            size_t memorySize,
-           std::chrono::milliseconds collectionInterval);
+           const Timer<T,I>& timer,
+           I collectionInterval);
 
   /**
    * \brief Submit the specified entry to Carousel
@@ -62,16 +65,17 @@ private:
 private:
   LogCallback m_callback;
   Bloom m_bloom;
+  const Timer<T,I>& m_timer;
   const double m_x = 2.3;
 
   const size_t m_memorySize;
-  const std::chrono::milliseconds m_collectionInterval;
-  const std::chrono::milliseconds m_phaseDuration;
+  const I m_collectionInterval;
+  const I m_phaseDuration;
 
   size_t m_k = 0;
   size_t m_kMask = 0;
   size_t m_v = 0;
-  std::chrono::steady_clock::time_point m_phaseStartTime;
+  T m_phaseStartTime;
   size_t m_nMatchingThisPhase = 0;
 };
 

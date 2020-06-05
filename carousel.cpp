@@ -7,21 +7,29 @@
 
 namespace carousel {
 
-Carousel::Carousel(const LogCallback& callback,
-                   size_t memorySize,
-                   std::chrono::milliseconds collectionInterval)
+template class Carousel<uint64_t, uint64_t>;
+template class Carousel<std::chrono::steady_clock::time_point,
+                        std::chrono::milliseconds>;
+
+template<class T, class I>
+Carousel<T,I>::Carousel(const LogCallback& callback,
+                        size_t memorySize,
+                        const Timer<T,I>& timer,
+                        I collectionInterval)
   : m_callback(callback)
   , m_bloom(memorySize * 10)
+  , m_timer(timer)
   , m_memorySize(memorySize)
   , m_collectionInterval(collectionInterval)
-  , m_phaseDuration(std::chrono::milliseconds(memorySize / collectionInterval.count()))
+  , m_phaseDuration(timer.getPhase(memorySize, collectionInterval))
 {
 }
 
+template<class T, class I>
 void
-Carousel::log(const std::string& key, const std::string& entry)
+Carousel<T,I>::log(const std::string& key, const std::string& entry)
 {
-  if (std::chrono::steady_clock::now() >= m_phaseStartTime + m_phaseDuration) {
+  if (m_timer.now() >= m_phaseStartTime + m_phaseDuration) {
     // Time to go to the next phase
     startNextPhase();
   }
@@ -49,18 +57,20 @@ Carousel::log(const std::string& key, const std::string& entry)
   }
 }
 
+template<class T, class I>
 void
-Carousel::reset()
+Carousel<T,I>::reset()
 {
   m_bloom.reset();
   m_k = 0;
   m_kMask = 0;
   m_v = 0;
-  m_phaseStartTime = std::chrono::steady_clock::now();
+  m_phaseStartTime = m_timer.now();
 }
 
+template<class T, class I>
 void
-Carousel::startNextPhase()
+Carousel<T,I>::startNextPhase()
 {
   // Check for bloom filter underflow
   if (isBloomFilterUnderflowed()) {
@@ -69,34 +79,38 @@ Carousel::startNextPhase()
 
   m_bloom.reset();
   m_v = (m_v + 1) % static_cast<size_t>(std::pow(2, m_k));
-  m_phaseStartTime = std::chrono::steady_clock::now();
+  m_phaseStartTime = m_timer.now();
   m_nMatchingThisPhase = 0;
 }
 
+template<class T, class I>
 void
-Carousel::repartitionOverflow()
+Carousel<T,I>::repartitionOverflow()
 {
   m_bloom.reset();
   m_k++;
   m_kMask += std::pow(2, m_k - 1);
   m_v = (m_v + 1) % static_cast<size_t>(std::pow(2, m_k));
-  m_phaseStartTime = std::chrono::steady_clock::now();
+  m_phaseStartTime = m_timer.now();
 }
 
+template<class T, class I>
 void
-Carousel::repartitionUnderflow()
+Carousel<T,I>::repartitionUnderflow()
 {
   m_k--;
 }
 
+template<class T, class I>
 bool
-Carousel::isBloomFilterOverflowed()
+Carousel<T,I>::isBloomFilterOverflowed()
 {
   return m_nMatchingThisPhase > m_memorySize;
 }
 
+template<class T, class I>
 bool
-Carousel::isBloomFilterUnderflowed()
+Carousel<T,I>::isBloomFilterUnderflowed()
 {
   return static_cast<double>(m_nMatchingThisPhase) < (static_cast<double>(m_memorySize) / m_x);
 }
