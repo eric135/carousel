@@ -1,7 +1,7 @@
 SRC := $(wildcard *.cpp)
-HDR := $(SRC:.cpp=.hpp)
+HDR := $(wildcard *.hpp)
 OBJ := $(SRC:.cpp=.o)
-CXXFLAGS := -Wall -Werror -fpic -std=c++11
+CXXFLAGS := -Wall -Werror -fpic -std=c++11 -g
 
 # Users can adjust these variables to modify compilation or installation
 # C++ compiler to use
@@ -21,7 +21,7 @@ install:
 	cp -v libcarousel.so $(PREFIX)/lib
 
 carousel: $(OBJ) $(HDR)
-	$(CXX) -shared -o libcarousel.so $(OBJ)
+	$(CXX) -o simpletest $(OBJ)
 
 %.o: %.cpp $(HDR)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
