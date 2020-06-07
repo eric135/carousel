@@ -182,7 +182,7 @@ Bloom::hash5(const std::string& key) const
       hash = ((hash ^ (test >> ThreeQuarters)) & (~HighBits));
     }
   }
-  return hash;
+  return hash % m_nBits;
 }
 
 } // namespace carousel
