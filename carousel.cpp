@@ -78,7 +78,7 @@ Carousel::repartitionOverflow()
 {
   m_bloom.reset();
   m_k++;
-  m_kMask += std::pow(2, m_k - 1);
+  m_kMask = std::pow(2, m_k) - 1;
   m_v = (m_v + 1) % static_cast<size_t>(std::pow(2, m_k));
   m_phaseStartTime = std::chrono::steady_clock::now();
   m_nMatchingThisPhase = 0;
@@ -89,6 +89,7 @@ Carousel::repartitionUnderflow()
 {
   if (m_k > 0) {
     m_k--;
+    m_kMask = std::pow(2, m_k) - 1;
   }
 }
 
