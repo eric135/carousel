@@ -81,6 +81,7 @@ Carousel::repartitionOverflow()
   m_kMask += std::pow(2, m_k - 1);
   m_v = (m_v + 1) % static_cast<size_t>(std::pow(2, m_k));
   m_phaseStartTime = std::chrono::steady_clock::now();
+  m_nMatchingThisPhase = 0;
 }
 
 void
