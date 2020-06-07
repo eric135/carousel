@@ -37,7 +37,7 @@ Carousel<T,I>::log(const std::string& key, const std::string& entry)
   size_t hash = std::hash<std::string>{}(key);
 
   // Check if key matches the current phase
-  if ((hash & m_kMask) == m_v) {
+  if ((hash & m_kMask) == (m_v & m_kMask)) {
     // Check if likely (bloom filter) already stored this key this phase
     if (m_bloom.isEvidenced(key)) {
       // Skip since likely already logged this phase
@@ -78,7 +78,7 @@ Carousel<T,I>::startNextPhase()
   }
 
   m_bloom.reset();
-  m_v = (m_v + 1) % static_cast<size_t>(std::pow(2, m_k));
+  m_v++;
   m_phaseStartTime = m_timer.now();
   m_nMatchingThisPhase = 0;
 }
@@ -89,16 +89,20 @@ Carousel<T,I>::repartitionOverflow()
 {
   m_bloom.reset();
   m_k++;
-  m_kMask += std::pow(2, m_k - 1);
-  m_v = (m_v + 1) % static_cast<size_t>(std::pow(2, m_k));
+  m_kMask = std::pow(2, m_k) - 1;
+  m_v++;
   m_phaseStartTime = m_timer.now();
+  m_nMatchingThisPhase = 0;
 }
 
 template<class T, class I>
 void
 Carousel<T,I>::repartitionUnderflow()
 {
-  m_k--;
+  if (m_k > 0) {
+    m_k--;
+    m_kMask = std::pow(2, m_k) - 1;
+  }
 }
 
 template<class T, class I>
