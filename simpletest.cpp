@@ -37,7 +37,7 @@ struct Options {
       case 'm': memorySize = atoi(optarg); break;
       case 'i': logInterval = atoi(optarg); break;
       case 'k': keyRange = atoi(optarg); break;
-      case 'l': logPerTick = atoi(optarg); break;
+      case 'r': logPerTick = atoi(optarg); break;
       case 'o': outputInterval = atoi(optarg); break;
       case 'T': totalIteration = atoi(optarg); break;
       case 'h': printHelp(); return 1;
@@ -91,6 +91,9 @@ int main(int argc, char* argv[])
       c.inputData(k, k);
       n.inputData(k, k);
     }
+
+    c.processLog();
+    n.processLog();
 
     if (iter % o.outputInterval == 0) {
       std::cout << iter << ":\tNaive: " << n.recorded_keys()

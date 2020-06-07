@@ -21,8 +21,13 @@ SimLogger::logCallback(const std::string& key, const std::string& content)
   if (m_logging_queue.size() < m_memorySize) {
     m_logging_queue.push_back(key);
   }
+}
+
+void
+SimLogger::processLog()
+{
   uint64_t now = m_timer.now();
-  if (now - m_lastLog >= m_interval) {
+  if (!m_logging_queue.empty() && now - m_lastLog >= m_interval) {
     m_db.insert(m_logging_queue.front());
     m_logging_queue.pop_front();
     m_lastLog = now;

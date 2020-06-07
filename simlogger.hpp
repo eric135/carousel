@@ -20,6 +20,9 @@ public:
   void
   logCallback(const std::string& key, const std::string& content);
 
+  void
+  processLog();
+
   virtual void
   inputData(const std::string& key, const std::string& content) = 0;
 
@@ -33,9 +36,9 @@ private:
   const carousel::SimulationTimer& m_timer;
   std::deque<std::string> m_logging_queue;
   std::unordered_set<std::string> m_db;
+  size_t m_memorySize;
   uint64_t m_interval;
   uint64_t m_lastLog;
-  size_t m_memorySize;
 };
 
 class NaiveLogger : public SimLogger
