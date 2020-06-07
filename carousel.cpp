@@ -87,7 +87,9 @@ Carousel::repartitionOverflow()
 void
 Carousel::repartitionUnderflow()
 {
-  m_k--;
+  if (m_k > 0) {
+    m_k--;
+  }
 }
 
 bool
