@@ -1,4 +1,4 @@
 /.vscode
 /libcarousel.so
-/carousel_test
+/frontend/carousel_test
 *.o
