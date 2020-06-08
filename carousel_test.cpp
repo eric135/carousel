@@ -4,6 +4,7 @@
 
 #include <getopt.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "carousel.hpp"
 #include "logger.hpp"
@@ -13,6 +14,7 @@ using carousel::Carousel;
 using carousel::Logger;
 using carousel::LogFetcher;
 using carousel::RandomLogFetcher;
+using carousel::DatasetLogFetcher;
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -24,6 +26,8 @@ struct Options {
   int logPerTick = 3;
   int outputInterval = 200;
   int totalIteration = 50000;
+  char *dataset = nullptr;
+  int datasetSkip = 0;
 
   int parseArg(int argc, char *argv[])
   {
@@ -35,12 +39,14 @@ struct Options {
       {"lograte", required_argument, nullptr, 'r'},
       {"output", required_argument, nullptr, 'o'},
       {"iteration", required_argument, nullptr, 'T'},
+      {"dataset", required_argument, nullptr, 'd'},
+      {"dataset-skip", required_argument, nullptr, 'S'},
       {"help", no_argument, nullptr, 'h'},
       {nullptr, 0, nullptr, 0},
     };
 
     while ((ch = getopt_long(argc, argv,
-                             "m:i:k:r:o:T:h",
+                             "m:i:k:r:o:T:d:S:h",
                              optlist, NULL)) != -1) {
       switch(ch) {
       case 'm': memorySize = atoi(optarg); break;
@@ -49,6 +55,8 @@ struct Options {
       case 'r': logPerTick = atoi(optarg); break;
       case 'o': outputInterval = atoi(optarg); break;
       case 'T': totalIteration = atoi(optarg); break;
+      case 'd': dataset = strdup(optarg); break;
+      case 'S': datasetSkip = atoi(optarg); break;
       case 'h': printHelp(); return 1;
       default:
         std::cerr << "Unrecognized argument" << std::endl;
@@ -69,6 +77,8 @@ private:
     std::cerr << "-r, --lograte\tNumbers of log generated per tick (default: 10)" << std::endl;
     std::cerr << "-o, --output\tNumbers of ticks per output (default: 200)" << std::endl;
     std::cerr << "-T, --iteration\tTotal numbers of iteration to run (default: 10000)" << std::endl;
+    std::cerr << "-d, --dataset\tUse dataset file (Otherwise the random data generator will be used" << std::endl;
+    std::cerr << "-S, --dataset-skip\tSkip number of lines in the dataset (default: 0)" << std::endl;
     std::cerr << "-h, --help\tThis help message" << std::endl;
   }
 };
@@ -87,7 +97,12 @@ int main(int argc, char *argv[])
                     std::chrono::milliseconds(o.logInterval));
 
   std::shared_ptr<LogFetcher> fetcher;
-  fetcher = std::make_shared<RandomLogFetcher>(o.keyRange);
+
+  if (o.dataset != nullptr) {
+    fetcher = std::make_shared<DatasetLogFetcher>(o.dataset, o.datasetSkip);
+  } else {
+    fetcher = std::make_shared<RandomLogFetcher>(o.keyRange);
+  }
 
   if (!fetcher->prepare()) {
     return 1;
