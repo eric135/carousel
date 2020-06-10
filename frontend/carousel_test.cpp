@@ -26,6 +26,7 @@ struct Options {
   int logPerTick = 3;
   int outputInterval = 200;
   int totalIteration = 50000;
+  bool original = true;
   char *dataset = nullptr;
   int datasetSkip = 0;
 
@@ -39,6 +40,7 @@ struct Options {
       {"lograte", required_argument, nullptr, 'r'},
       {"output", required_argument, nullptr, 'o'},
       {"iteration", required_argument, nullptr, 'T'},
+      {"enhanced", no_argument, nullptr, 'e'},
       {"dataset", required_argument, nullptr, 'd'},
       {"dataset-skip", required_argument, nullptr, 'S'},
       {"help", no_argument, nullptr, 'h'},
@@ -46,7 +48,7 @@ struct Options {
     };
 
     while ((ch = getopt_long(argc, argv,
-                             "m:i:k:r:o:T:d:S:h",
+                             "m:i:k:r:o:T:ed:S:h",
                              optlist, NULL)) != -1) {
       switch(ch) {
       case 'm': memorySize = atoi(optarg); break;
@@ -55,6 +57,7 @@ struct Options {
       case 'r': logPerTick = atoi(optarg); break;
       case 'o': outputInterval = atoi(optarg); break;
       case 'T': totalIteration = atoi(optarg); break;
+      case 'e': original = false; break;
       case 'd': dataset = strdup(optarg); break;
       case 'S': datasetSkip = atoi(optarg); break;
       case 'h': printHelp(); return 1;
@@ -78,6 +81,7 @@ private:
     std::cerr << "-o, --output\tNumbers of ticks per output (default: 200)" << std::endl;
     std::cerr << "-T, --iteration\tTotal numbers of iteration to run (default: 10000)" << std::endl;
     std::cerr << "-d, --dataset\tUse dataset file (Otherwise the random data generator will be used" << std::endl;
+    std::cerr << "-e, --enhanced\tUse enhanced behavior, without wrapping v without 2^k (default: disabled)" << std::endl;
     std::cerr << "-S, --dataset-skip\tSkip number of lines in the dataset (default: 0)" << std::endl;
     std::cerr << "-h, --help\tThis help message" << std::endl;
   }
@@ -94,7 +98,8 @@ int main(int argc, char *argv[])
   Logger n(o.memorySize, std::chrono::milliseconds(o.logInterval));
   Carousel carousel(std::bind(&Logger::log, &c, _1, _2),
                     o.memorySize,
-                    std::chrono::milliseconds(o.logInterval));
+                    std::chrono::milliseconds(o.logInterval),
+                    o.original);
 
   std::shared_ptr<LogFetcher> fetcher;
 

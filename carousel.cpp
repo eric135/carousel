@@ -9,12 +9,14 @@ namespace carousel {
 
 Carousel::Carousel(const LogCallback& callback,
                    size_t memorySize,
-                   std::chrono::milliseconds collectionInterval)
+                   std::chrono::milliseconds collectionInterval,
+                   bool original)
   : m_callback(callback)
   , m_bloom(memorySize * 10)
   , m_memorySize(memorySize)
   , m_collectionInterval(collectionInterval)
   , m_phaseDuration(std::chrono::milliseconds(memorySize * collectionInterval.count()))
+  , m_original(original)
 {
 }
 
@@ -28,8 +30,9 @@ Carousel::log(const std::string& key, const std::string& entry)
 
   size_t hash = std::hash<std::string>{}(key);
 
+  size_t phase = m_original ? m_v : (m_v & m_kMask);
   // Check if key matches the current phase
-  if ((hash & m_kMask) == m_v) {
+  if ((hash & m_kMask) == phase) {
     // Check if likely (bloom filter) already stored this key this phase
     if (m_bloom.isEvidenced(key)) {
       // Skip since likely already logged this phase
@@ -68,7 +71,11 @@ Carousel::startNextPhase()
   }
 
   m_bloom.reset();
-  m_v = (m_v + 1) % static_cast<size_t>(std::pow(2, m_k));
+  if (m_original) {
+    m_v = (m_v + 1) % static_cast<size_t>(std::pow(2, m_k));
+  } else {
+    m_v++;
+  }
   m_phaseStartTime = std::chrono::steady_clock::now();
   m_nMatchingThisPhase = 0;
 }
@@ -79,7 +86,11 @@ Carousel::repartitionOverflow()
   m_bloom.reset();
   m_k++;
   m_kMask = std::pow(2, m_k) - 1;
-  m_v = (m_v + 1) % static_cast<size_t>(std::pow(2, m_k));
+  if (m_original) {
+    m_v = (m_v + 1) % static_cast<size_t>(std::pow(2, m_k));
+  } else {
+    m_v++;
+  }
   m_phaseStartTime = std::chrono::steady_clock::now();
   m_nMatchingThisPhase = 0;
 }

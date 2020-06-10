@@ -22,10 +22,12 @@ public:
    * \brief Creates an instance of Carousel that outputs to the specified callback
    * \param memorySize Number of sources that can be logged
    * \param collectionInterval Interval at which logger can accept log entries
+   * \param original Whether to use the original behavior in the paper or our proposed new one
    */
   Carousel(const LogCallback& callback,
            size_t memorySize,
-           std::chrono::milliseconds collectionInterval);
+           std::chrono::milliseconds collectionInterval,
+           bool original = true);
 
   /**
    * \brief Submit the specified entry to Carousel
@@ -73,6 +75,8 @@ private:
   size_t m_v = 0;
   std::chrono::steady_clock::time_point m_phaseStartTime;
   size_t m_nMatchingThisPhase = 0;
+
+  const bool m_original;
 };
 
 } // namespace carousel
