@@ -74,12 +74,12 @@ private:
   void printHelp()
   {
     std::cerr << "simpletest [OPTIONS]\n" << std::endl;
-    std::cerr << "-m, --memory\tBuffer size of logger (default: 5)" << std::endl;
-    std::cerr << "-i, --interval\tTicks between logger process a log (default: 50)" << std::endl;
-    std::cerr << "-k, --key\tNumber of keys (default: 100)" << std::endl;
-    std::cerr << "-r, --lograte\tNumbers of log generated per tick (default: 10)" << std::endl;
+    std::cerr << "-m, --memory\tBuffer size of logger (default: 200)" << std::endl;
+    std::cerr << "-i, --interval\tTicks between logger process a log (default: 10)" << std::endl;
+    std::cerr << "-k, --key\tNumber of keys (default: 3000)" << std::endl;
+    std::cerr << "-r, --lograte\tNumbers of log generated per tick (default: 3)" << std::endl;
     std::cerr << "-o, --output\tNumbers of ticks per output (default: 200)" << std::endl;
-    std::cerr << "-T, --iteration\tTotal numbers of iteration to run (default: 10000)" << std::endl;
+    std::cerr << "-T, --iteration\tTotal numbers of iteration to run (default: 50000)" << std::endl;
     std::cerr << "-d, --dataset\tUse dataset file (Otherwise the random data generator will be used" << std::endl;
     std::cerr << "-e, --enhanced\tUse enhanced behavior, without wrapping v without 2^k (default: disabled)" << std::endl;
     std::cerr << "-S, --dataset-skip\tSkip number of lines in the dataset (default: 0)" << std::endl;
