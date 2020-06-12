@@ -25,3 +25,7 @@ These settings can be changed by editing the `CXX` and `PREFIX` variables in Mak
 To include this library, in your source code, include `carousel/carousel.hpp`.
 
 To link with this library, specify `-lcarousel` in your LDFLAGS.
+
+## Using the frontend test program
+
+This repository also contains a test frontend as a simple demonstration the Carousel algorithm. It is located in the `frontend` folder. It can either use randomly generated data (default) or datasets provided in the `test-data` folder (use `-d` argument). Refer to `./frontend/carousel_test --help` for detailed usage.
